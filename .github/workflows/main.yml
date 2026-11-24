@@ -1,0 +1,40 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Extract Android project
+        run: |
+          mkdir project
+          ZIP=$(find . -maxdepth 2 -name "*.zip" | head -n 1)
+          unzip "$ZIP" -d project
+
+      - name: Build APK
+        run: |
+          cd project
+          chmod +x $(find . -name gradlew | head -n 1)
+          cd $(dirname $(find . -name gradlew | head -n 1))
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Gaon-Ki-Kahaniyan-APK
+          path: project/**/build/outputs/apk/debug/*.apk
